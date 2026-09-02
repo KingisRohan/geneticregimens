@@ -307,6 +307,19 @@ section { position: relative; z-index: 2; }
   flex-wrap: wrap;
 }
 
+@media (max-width: 600px) {
+  .hero {
+    padding-top: 32px;
+    padding-bottom: 40px;
+  }
+  .hero-mark {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 16px;
+  }
+  .hero .eyebrow { margin-bottom: 10px; }
+}
+
 /* ---------- Problem section ---------- */
 
 .problem-grid {
