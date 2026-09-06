@@ -547,3 +547,104 @@ section { position: relative; z-index: 2; }
   font-size: 22px;
   color: var(--rust);
 }
+
+/* ---------- Consultation gate modal ---------- */
+
+.gr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(26, 24, 23, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+}
+
+.gr-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.gr-modal-lock { overflow: hidden; }
+
+.gr-modal {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  max-width: 440px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: clamp(28px, 5vw, 40px);
+}
+
+.gr-modal h3 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: clamp(20px, 3vw, 24px);
+}
+
+.gr-modal-sub {
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.gr-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.gr-modal-close:hover { color: var(--rust); }
+
+.gr-field { margin-bottom: 18px; }
+
+.gr-field label {
+  display: block;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+
+.gr-field input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--paper);
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 2px;
+  border-radius: 0;
+}
+
+.gr-field input:focus {
+  outline: none;
+  border-bottom-color: var(--rust);
+}
+
+.gr-modal-submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .gr-modal { padding: 28px 22px; }
+}
