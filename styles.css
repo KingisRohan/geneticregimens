@@ -645,6 +645,13 @@ body.gr-modal-lock { overflow: hidden; }
   cursor: pointer;
 }
 
+.gr-modal-success .gr-modal-done {
+  width: 100%;
+  justify-content: center;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
 @media (max-width: 480px) {
   .gr-modal { padding: 28px 22px; }
 }

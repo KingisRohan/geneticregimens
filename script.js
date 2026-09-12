@@ -81,12 +81,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // localStorage unavailable (private browsing etc.) — fail silently
   }
 
-  // ---- Consultation gate ----
-  // Every WhatsApp link on the site is intercepted. Before a visitor can
-  // message Siddhesh, they fill a short form (Name, Location, Date of Birth,
-  // WhatsApp Number). That data is sent to a Google Form, which records it
-  // into a linked Google Sheet in Drive. Only after that submission succeeds
-  // does the visitor get taken to WhatsApp.
+  // ---- Consultation enquiry form ----
+  // Every consultation CTA on the site opens this form. Name, Location,
+  // Date of Birth, and WhatsApp Number are sent to a Google Form, which
+  // records them into a linked Google Sheet in Drive. There is no WhatsApp
+  // handoff: submitting the form is the entire enquiry, and the visitor
+  // sees a confirmation right in the modal.
   (function () {
     var GOOGLE_FORM_ACTION = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSen74VqhmGCu86Nkl-iZnoCQx-W7tSOPJ--MXyXdWsC-y8glw/formResponse';
     var FIELD_NAME = 'entry.23463595';
@@ -94,10 +94,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var FIELD_DOB = 'entry.969334037';
     var FIELD_PHONE = 'entry.2033626420';
 
-    var waLinks = Array.prototype.slice.call(document.querySelectorAll('a[href*="wa.me"]'));
-    if (waLinks.length === 0) return;
-
-    var pendingHref = null;
+    var ctaLinks = Array.prototype.slice.call(document.querySelectorAll('.js-consult-cta'));
+    if (ctaLinks.length === 0) return;
 
     var overlay = document.createElement('div');
     overlay.className = 'gr-modal-overlay';
@@ -106,24 +104,36 @@ document.addEventListener('DOMContentLoaded', function () {
     overlay.innerHTML =
       '<div class="gr-modal" role="dialog" aria-modal="true" aria-labelledby="grModalTitle">' +
         '<button type="button" class="gr-modal-close" id="grModalClose" aria-label="Close">&times;</button>' +
-        '<span class="label eyebrow">Before You Message Us</span>' +
-        '<h3 id="grModalTitle">Quick details, then straight to WhatsApp.</h3>' +
-        '<p class="gr-modal-sub">Takes twenty seconds. Helps Siddhesh prepare before your first message.</p>' +
-        '<form id="grConsultForm" novalidate>' +
-          '<div class="gr-field"><label for="grName">Name</label><input type="text" id="grName" required autocomplete="name"></div>' +
-          '<div class="gr-field"><label for="grLocation">Location</label><input type="text" id="grLocation" required autocomplete="address-level2"></div>' +
-          '<div class="gr-field"><label for="grDob">Date of Birth</label><input type="date" id="grDob" required autocomplete="bday"></div>' +
-          '<div class="gr-field"><label for="grPhone">WhatsApp Number</label><input type="tel" id="grPhone" required autocomplete="tel" placeholder="e.g. 9876543210"></div>' +
-          '<button type="submit" class="btn btn-primary gr-modal-submit">Continue to WhatsApp</button>' +
-        '</form>' +
+        '<div id="grModalFormView">' +
+          '<span class="label eyebrow">Start Your Consultation</span>' +
+          '<h3 id="grModalTitle">Tell us a bit about you.</h3>' +
+          '<p class="gr-modal-sub">We record every enquiry ourselves and reach out directly.</p>' +
+          '<form id="grConsultForm" novalidate>' +
+            '<div class="gr-field"><label for="grName">Name</label><input type="text" id="grName" required autocomplete="name"></div>' +
+            '<div class="gr-field"><label for="grLocation">Location</label><input type="text" id="grLocation" required autocomplete="address-level2"></div>' +
+            '<div class="gr-field"><label for="grDob">Date of Birth</label><input type="date" id="grDob" required autocomplete="bday"></div>' +
+            '<div class="gr-field"><label for="grPhone">WhatsApp Number</label><input type="tel" id="grPhone" required autocomplete="tel" placeholder="e.g. 9876543210"></div>' +
+            '<button type="submit" class="btn btn-primary gr-modal-submit">Send Enquiry</button>' +
+          '</form>' +
+        '</div>' +
+        '<div id="grModalSuccessView" class="gr-modal-success" hidden>' +
+          '<span class="label eyebrow">Received</span>' +
+          '<h3>Thank you.</h3>' +
+          '<p class="gr-modal-sub">Your details have been recorded. Siddhesh will reach out to you directly.</p>' +
+          '<button type="button" class="btn btn-ghost gr-modal-done" id="grModalDone">Close</button>' +
+        '</div>' +
       '</div>';
     document.body.appendChild(overlay);
 
     var closeBtn = document.getElementById('grModalClose');
+    var doneBtn = document.getElementById('grModalDone');
     var form = document.getElementById('grConsultForm');
+    var formView = document.getElementById('grModalFormView');
+    var successView = document.getElementById('grModalSuccessView');
 
-    function openModal(href) {
-      pendingHref = href;
+    function openModal() {
+      formView.hidden = false;
+      successView.hidden = true;
       overlay.classList.add('open');
       overlay.setAttribute('aria-hidden', 'false');
       document.body.classList.add('gr-modal-lock');
@@ -135,17 +145,17 @@ document.addEventListener('DOMContentLoaded', function () {
       overlay.classList.remove('open');
       overlay.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('gr-modal-lock');
-      pendingHref = null;
     }
 
-    waLinks.forEach(function (link) {
+    ctaLinks.forEach(function (link) {
       link.addEventListener('click', function (e) {
         e.preventDefault();
-        openModal(link.getAttribute('href'));
+        openModal();
       });
     });
 
     closeBtn.addEventListener('click', closeModal);
+    doneBtn.addEventListener('click', closeModal);
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) { closeModal(); }
     });
@@ -155,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (!pendingHref) { return; }
 
       var name = document.getElementById('grName').value.trim();
       var location = document.getElementById('grLocation').value.trim();
@@ -173,22 +182,19 @@ document.addEventListener('DOMContentLoaded', function () {
       body.append(FIELD_DOB, dob);
       body.append(FIELD_PHONE, phone);
 
-      // Fire-and-forget: not awaited, so the WhatsApp window below opens
-      // synchronously inside this click-gesture handler and browsers don't
-      // block it as a popup.
       fetch(GOOGLE_FORM_ACTION, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString()
       }).catch(function () {
-        // Network hiccup — the visitor still gets through to WhatsApp.
+        // Network hiccup — the enquiry may not have recorded, but the
+        // visitor still sees a confirmation rather than getting stuck.
       });
 
-      var target = pendingHref;
-      closeModal();
       form.reset();
-      window.open(target, '_blank', 'noopener');
+      formView.hidden = true;
+      successView.hidden = false;
     });
   })();
 
